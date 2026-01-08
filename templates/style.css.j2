@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: {{ bg_color }};
+  color: {{ text_color }};
+  transition: all 0.5s ease;
+}
+
+.container {
+  text-align: center;
+  margin-top: 20vh;
+}
+
+body.energetic {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}

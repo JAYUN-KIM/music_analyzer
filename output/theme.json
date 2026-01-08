@@ -1,0 +1,28 @@
+{
+    "emotion": {
+        "primary": "Sad",
+        "secondary": [],
+        "confidence": 0.799,
+        "source": "ai"
+    },
+    "hero": {
+        "message": "AI 멀티 감정 분석 (79.9%)"
+    },
+    "metrics": {
+        "tempo": 95.703125,
+        "energy": 0.08505350351333618,
+        "brightness": 475.82155758321375,
+        "roughness": 0.038076489333397835,
+        "spread": 543.2231647597512,
+        "harmony": 0.20934945344924927
+    },
+    "ui": {
+        "theme": "auto",
+        "visual_level": "rich",
+        "animation": "high"
+    },
+    "meta": {
+        "analysis_mode": "fast",
+        "duration_sec": 30
+    }
+}

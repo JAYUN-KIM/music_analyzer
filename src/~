@@ -1,0 +1,86 @@
+import librosa
+import numpy as np
+import json
+import os
+import subprocess
+
+# 경로 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # src 폴더
+ROOT_DIR = os.path.dirname(BASE_DIR)
+
+INPUT_MP3 = os.path.join(ROOT_DIR, "audio", "input.mp3")
+TEMP_WAV = os.path.join(ROOT_DIR, "audio", "temp.wav")
+OUTPUT_JSON = os.path.join(ROOT_DIR, "theme.json")
+
+def analyze():
+    # 1. 파일 확인
+    if not os.path.exists(INPUT_MP3):
+        print(f"[실패] {INPUT_MP3} 파일이 없습니다. audio 폴더에 input.mp3를 넣어주세요.")
+        return
+
+    print(">>> 1. MP3를 WAV로 변환 중...")
+    try:
+        # ffmpeg을 사용하여 변환
+        subprocess.run(['ffmpeg', '-y', '-i', INPUT_MP3, TEMP_WAV], 
+                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        print(f"[오류] 변환 실패: {e}")
+        return
+
+    print(">>> 2. 음악 분석 중 (Librosa)...")
+    try:
+        # 오디오 로드 (시작 후 30초만 분석)
+        y, sr = librosa.load(TEMP_WAV, duration=30)
+
+        # 특징 추출
+        tempo, _ = librosa.beat.beat_track(y=y, sr=sr) # 템포(BPM)
+        rms = librosa.feature.rms(y=y)                 # 에너지(음량)
+        energy = np.mean(rms)
+        
+        # 주파수 중심(Spectral Centroid) - 소리의 밝기
+        cent = librosa.feature.spectral_centroid(y=y, sr=sr)
+        brightness = np.mean(cent)
+
+        # 3. 감정 로직 매핑 (기준값은 조정 가능)
+        if tempo > 120:
+            mood = "Energetic"
+            color = "#FF5733" # 활기찬 오렌지/레드
+            msg = "빠르고 신나는 음악이네요! 에너지가 넘칩니다."
+        elif energy < 0.03:
+            mood = "Calm"
+            color = "#5DADE2" # 차분한 블루
+            msg = "잔잔하고 평온한 음악입니다. 마음이 편안해지네요."
+        else:
+            mood = "Happy"
+            color = "#F4D03F" # 밝은 옐로우
+            msg = "듣기 좋은 밝은 분위기의 곡입니다."
+
+        # 결과 저장할 데이터 구조
+        result_data = {
+            "mood": mood,
+            "theme_color": color,
+            "description": msg,
+            "analysis_result": {
+                "bpm": round(float(tempo), 1),
+                "energy_level": round(float(energy), 4),
+                "brightness": round(float(brightness), 2)
+            }
+        }
+
+        # 4. JSON 파일로 저장
+        with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
+            json.dump(result_data, f, indent=4, ensure_ascii=False)
+        
+        print(f">>> 3. 분석 완료! 결과 파일 생성됨: {OUTPUT_JSON}")
+        print(f"    [결과] Mood: {mood}, BPM: {round(float(tempo), 1)}")
+
+    except Exception as e:
+        print(f"[오류] 분석 실패: {e}")
+
+    finally:
+        # 임시 wav 파일 삭제
+        if os.path.exists(TEMP_WAV):
+            os.remove(TEMP_WAV)
+
+if __name__ == "__main__":
+    analyze()
